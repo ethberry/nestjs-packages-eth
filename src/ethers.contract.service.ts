@@ -103,7 +103,6 @@ export class EthersContractService {
     }
   }
 
-
   public async getLastBlockEth(): Promise<number> {
     return await this.provider.getBlockNumber().catch(err => {
       console.info("getBlockNumberError", err);

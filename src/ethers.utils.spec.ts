@@ -1,12 +1,12 @@
-import { transform } from "./ethers.utils";
-import { Interface, Result } from "@ethersproject/abi";
-import { abi } from "./interfaces/ABI.json";
+import { Interface } from "@ethersproject/abi";
 import { Log } from "@ethersproject/abstract-provider";
+
+import { abi } from "./interfaces/ABI.json";
 
 describe("Utils", () => {
   it("transform", () => {
     const iface = new Interface(abi);
-    const { args, ...rest } = iface.parseLog({
+    const { args } = iface.parseLog({
       logIndex: 1,
       removed: false,
       blockNumber: 1,
@@ -23,17 +23,12 @@ describe("Utils", () => {
       ],
     } as Log);
 
-    const result = {
-      ...rest,
-      args: transform(args) as Result,
-    };
-
     const expected = {
       tokenId: "4",
       approved: "0xd6A7c915066E17ba18024c799258C8A286fFBc00",
       owner: "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
     };
 
-    expect(result.args).toEqual(expected);
+    expect(args).toEqual(expected);
   });
 });

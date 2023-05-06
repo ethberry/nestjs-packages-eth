@@ -5,12 +5,10 @@ import { transformPatternToRoute } from "@nestjs/microservices/utils";
 import { PATTERN_METADATA } from "@nestjs/microservices/constants";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { EMPTY, from, Observable, Subject } from "rxjs";
-import { providers } from "ethers";
-import { Log } from "@ethersproject/abstract-provider";
-import { Interface, LogDescription } from "@ethersproject/abi";
+import { Interface, JsonRpcProvider, Log, LogDescription } from "ethers";
 import { DiscoveredMethodWithMeta, DiscoveryService } from "@golevelup/nestjs-discovery";
 
-import { getPastEvents, parseLog } from "./ethers.utils";
+import { getPastEvents } from "./ethers.utils";
 import { ETHERS_RPC, MODULE_OPTIONS_PROVIDER } from "./ethers.constants";
 import { IModuleOptions } from "./interfaces";
 import { mergeAll, mergeMap } from "rxjs/operators";
@@ -28,7 +26,7 @@ export class EthersContractService {
     @Inject(Logger)
     protected readonly loggerService: LoggerService,
     @Inject(ETHERS_RPC)
-    protected readonly provider: providers.JsonRpcProvider,
+    protected readonly provider: JsonRpcProvider,
     protected readonly discoveryService: DiscoveryService,
     protected readonly configService: ConfigService,
     @Inject(MODULE_OPTIONS_PROVIDER)
@@ -120,7 +118,7 @@ export class EthersContractService {
     const iface = contractInterface instanceof Interface ? contractInterface : new Interface(contractInterface);
 
     for (const log of events) {
-      const description = parseLog(iface, log);
+      const description = iface.parseLog(log as any);
 
       if (!description || !eventNames.includes(description.name)) {
         continue;

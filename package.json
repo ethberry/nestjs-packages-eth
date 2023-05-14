@@ -51,7 +51,7 @@
     "ws": "7.4.6"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
   "license": "UNLICENSED",
   "main": "./dist/index.js",

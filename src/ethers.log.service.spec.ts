@@ -21,9 +21,9 @@ config();
 
 @Injectable()
 class TestEthersContractService {
-  public async logEvent(event: ILogEvent, ctx: Log): Promise<void> {
-    console.info("event", event);
-    console.info("ctx", ctx);
+  public async logEvent(event: ILogEvent, _ctx: Log): Promise<void> {
+    // console.info("event", event);
+    // console.info("ctx", _ctx);
     await Promise.resolve(event);
   }
 }

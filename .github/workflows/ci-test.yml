@@ -30,7 +30,6 @@ jobs:
           BESU_RPC_HTTP_API: "ADMIN,ETH,NET,WEB3,MINER"
           BESU_RPC_WS_API: "ADMIN,ETH,NET,WEB3,MINER"
           BESU_MINER_ENABLED: "true"
-          BESU_FAST_SYNC_MIN_PEERS: 3
           BESU_MINER_COINBASE: fe3b557e8fb62b89f4916b721be55ceb828dbd73
           BESU_NETWORK: "dev"
           BESU_NAT_METHOD: "DOCKER"
@@ -63,6 +62,8 @@ jobs:
       - name: Npm run test
         run: npm run test
         env:
-          WEBSOCKET_ADDR: ws://0.0.0.0:8546/
-          RPC_ADDR: http://0.0.0.0:8545/
+          JSON_RPC_ADDR: http://0.0.0.0:8545/
+          PRIVATE_KEY:  ${{ secrets.BESU_PRIVATE_KEY }}
+          ACCOUNT:  ${{ secrets.BESU_ACCOUNT }}
           GEMUNION_API_KEY: ${{ secrets.GEMUNION_API_KEY }}
+          LATENCY: 1

@@ -2,6 +2,7 @@ import { Controller, Injectable, Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Test } from "@nestjs/testing";
 import { Ctx, EventPattern, Payload } from "@nestjs/microservices";
+import { CronExpression } from "@nestjs/schedule";
 import { BaseContract, ContractFactory, Interface, JsonRpcProvider, Log, Wallet, ZeroHash } from "ethers";
 import { config } from "dotenv";
 
@@ -49,6 +50,15 @@ class TestEthersContractController {
 }
 
 @Module({
+  imports: [
+    LicenseModule.forRootAsync(LicenseModule, {
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): string => {
+        return configService.get<string>("GEMUNION_API_KEY", process.env.GEMUNION_API_KEY);
+      },
+    }),
+  ],
   providers: [TestEthersContractService],
   controllers: [TestEthersContractController],
   exports: [TestEthersContractService],
@@ -61,7 +71,7 @@ describe.only("EthersServer", () => {
   let contract: IERC721;
 
   // https://github.com/facebook/jest/issues/11543
-  jest.setTimeout(10000);
+  jest.setTimeout(20000);
 
   beforeAll(async () => {
     provider = new JsonRpcProvider(process.env.JSON_RPC_ADDR);
@@ -109,6 +119,7 @@ describe.only("EthersServer", () => {
                 block: {
                   fromBlock,
                   debug: true,
+                  cron: CronExpression.EVERY_5_SECONDS,
                 },
               };
             },
@@ -131,8 +142,7 @@ describe.only("EthersServer", () => {
       const tx = await contract.renounceRole(ZeroHash, process.env.ACCOUNT);
 
       await tx.wait();
-
-      await new Promise<void>(resolve => setTimeout(() => resolve(), 5000));
+      await new Promise<void>(resolve => setTimeout(() => resolve(), 10000));
 
       expect(logSpyContract).toBeCalledTimes(2);
     });

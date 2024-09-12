@@ -7,6 +7,7 @@ import { BaseContract, ContractFactory, Interface, JsonRpcProvider, Log, Wallet,
 import { config } from "dotenv";
 
 import { LicenseModule } from "@gemunion/nest-js-module-license";
+import { delay } from "@gemunion/utils";
 
 import { EthersContractModule } from "./ethers.contract.module";
 import { ILogEvent, IModuleOptions } from "./interfaces";
@@ -16,13 +17,19 @@ interface IERC721 extends BaseContract {
   renounceRole: (role: string, account: string) => Promise<any>;
 }
 
+export interface IAccessControlRoleRevokedEvent {
+  role: string;
+  account: string;
+  sender: string;
+}
+
 config();
 
 @Injectable()
 class TestEthersContractService {
-  public async logEvent(event: ILogEvent, _ctx: Log): Promise<void> {
-    // console.info("event", event);
-    // console.info("ctx", _ctx);
+  public async logEvent(event: ILogEvent<IAccessControlRoleRevokedEvent>, _ctx: Log): Promise<void> {
+    console.info("event", event);
+    console.info("ctx", _ctx);
     await Promise.resolve(event);
   }
 }
@@ -35,7 +42,7 @@ class TestEthersContractController {
     contractType: "TEST_CONTRACT",
     eventName: "RoleRevoked",
   })
-  public logEvent1(@Payload() event: ILogEvent, @Ctx() ctx: Log): Promise<void> {
+  public logEvent1(@Payload() event: ILogEvent<IAccessControlRoleRevokedEvent>, @Ctx() ctx: Log): Promise<void> {
     return this.testEthersContractService.logEvent(event, ctx);
   }
 
@@ -43,7 +50,7 @@ class TestEthersContractController {
     contractType: "TEST_CONTRACT",
     eventName: "RoleRevoked",
   })
-  public logEvent2(@Payload() event: ILogEvent, @Ctx() ctx: Log): Promise<void> {
+  public logEvent2(@Payload() event: ILogEvent<IAccessControlRoleRevokedEvent>, @Ctx() ctx: Log): Promise<void> {
     return this.testEthersContractService.logEvent(event, ctx);
   }
 }
@@ -142,7 +149,8 @@ describe.only("EthersServer", () => {
       const tx = await contract.renounceRole(ZeroHash, process.env.ACCOUNT);
 
       await tx.wait();
-      await new Promise<void>(resolve => setTimeout(() => resolve(), 10000));
+
+      await delay(5000);
 
       expect(logSpyContract).toBeCalledTimes(2);
     });

@@ -7,7 +7,6 @@ patchBigInt();
 export const getPastEvents = async (
   provider: JsonRpcProvider,
   address: Array<string>,
-  topics: Array<string | Array<string> | null>,
   fromBlockNumber: number,
   toBlockNumber: number,
   chunkLimit = 0,
@@ -35,7 +34,6 @@ export const getPastEvents = async (
     const logs: Log[] = await provider.send("eth_getLogs", [
       {
         address,
-        topics,
         fromBlock: `0x${chunk.fromBlock.toString(16)}`,
         toBlock: `0x${chunk.toBlock.toString(16)}`,
       },

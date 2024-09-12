@@ -13,7 +13,7 @@ import { recursivelyDecodeResult } from "@gemunion/utils-eth";
 
 import { getPastEvents } from "./ethers.utils";
 import { ETHERS_RPC, MODULE_OPTIONS_PROVIDER } from "./ethers.constants";
-import { ILogEvent, IModuleOptions } from "./interfaces";
+import { IContractOptions, ILogEvent, IModuleOptions } from "./interfaces";
 import { mergeAll, mergeMap } from "rxjs/operators";
 
 @Injectable()
@@ -23,6 +23,7 @@ export class EthersContractService {
   private fromBlock: number;
   private toBlock: number;
   private cronLock: boolean = false;
+  private list: Array<IContractOptions> = [];
 
   private subject = new Subject<any>();
 
@@ -55,7 +56,7 @@ export class EthersContractService {
   public async init(): Promise<void> {
     this.instanceId = (Math.random() + 1).toString(36).substring(7);
     this.latency = ~~this.configService.get<string>("LATENCY", "32");
-    this.fromBlock = this.options.block.fromBlock;
+    this.fromBlock = this.options.fromBlock;
     this.toBlock = await this.getLastBlock();
     // if block time is more than Cron delay
     if (this.fromBlock > this.toBlock) {
@@ -67,7 +68,7 @@ export class EthersContractService {
       return this.getPastEvents(this.fromBlock, this.toBlock);
     }
     // cron config MUST be bigger than Block Time!
-    return this.setCronJob(this.options.block.cron || CronExpression.EVERY_30_SECONDS);
+    return this.setCronJob(this.options.cron || CronExpression.EVERY_30_SECONDS);
   }
 
   public setCronJob(dto: CronExpression): void {
@@ -108,63 +109,49 @@ export class EthersContractService {
       toBlockNumber = fromBlockNumber;
     }
 
-    const { contractAddress, contractInterface, contractType, eventNames = [], topics = [] } = this.options.contract;
-
-    this.loggerService.log(
-      `getPastEvents ${contractType} @ ${contractAddress.toString()} @ ${fromBlockNumber}-${toBlockNumber}`,
-      `${EthersContractService.name}-${this.instanceId}`,
-    );
-
     // don't listen when no addresses are supplied
-    if (!contractAddress.length) {
+    if (!this.list.length) {
       return;
     }
 
-    const events = await getPastEvents(
-      this.provider,
-      contractAddress,
-      topics,
-      fromBlockNumber,
-      toBlockNumber,
-      1000,
-    ).catch(e => {
+    const allAddress = this.list.map(e => e.contractAddress);
+
+    const events = await getPastEvents(this.provider, allAddress, fromBlockNumber, toBlockNumber, 100).catch(e => {
       this.loggerService.log(JSON.stringify(e, null, "\t"), `${EthersContractService.name}-${this.instanceId}`);
       return [];
     });
 
     for (const log of events) {
-      const description = contractInterface.parseLog(log);
+      const contract = this.list.find(e => e.contractAddress.toLowerCase() === log.address.toLowerCase());
+
+      if (!contract) {
+        continue;
+      }
+
+      const description = contract.contractInterface.parseLog(log);
 
       // LOG PROBLEMS IF ANY
-      if (!description || (eventNames.length > 0 && !eventNames.includes(description.name))) {
-        if (this.options.block.debug) {
-          if (!description) {
-            this.loggerService.log("CAN'T PARSE LOG", `${EthersContractService.name}-${this.instanceId}`);
-            this.loggerService.log(JSON.stringify(log, null, "\t"), `${EthersContractService.name}-${this.instanceId}`);
-          }
-          if (description && !eventNames.includes(description.name)) {
-            this.loggerService.log(
-              `${description.name} NOT FOUND IN EVENTS LIST`,
-              `${EthersContractService.name}-${this.instanceId}`,
-            );
-            this.loggerService.log(eventNames.toString(), `${EthersContractService.name}-${this.instanceId}`);
-          }
-          this.loggerService.log(
-            JSON.stringify(description, null, "\t"),
-            `${EthersContractService.name}-${this.instanceId}`,
-          );
+      if (!description) {
+        if (this.options.debug) {
+          this.loggerService.log("CAN'T PARSE LOG", `${EthersContractService.name}-${this.instanceId}`);
+          this.loggerService.log(JSON.stringify(log, null, "\t"), `${EthersContractService.name}-${this.instanceId}`);
         }
         continue;
       }
 
-      if (this.options.block.debug) {
-        this.loggerService.log(
-          JSON.stringify(description, null, "\t"),
-          `${EthersContractService.name}-${this.instanceId}`,
-        );
-      }
+      this.loggerService.log(
+        JSON.stringify(description, null, "\t"),
+        `${EthersContractService.name}-${this.instanceId}`,
+      );
 
-      this.subject.next({ pattern: { contractType, eventName: description.name }, description, log });
+      this.subject.next({
+        pattern: {
+          contractType: contract.contractType,
+          eventName: description.name,
+        },
+        description,
+        log,
+      });
     }
 
     if (this.toBlock - this.fromBlock <= this.latency) {
@@ -176,26 +163,15 @@ export class EthersContractService {
     }
   }
 
-  public updateListener(address: Array<string>, fromBlock = 0, topics?: Array<string | Array<string> | null>): void {
-    if (address.length === 1) {
-      // add single
-      const addresses = this.options.contract.contractAddress;
-      this.options.contract.contractAddress = [...new Set(addresses.concat(address))];
-    } else if (address.length > 1) {
-      // update array
-      this.options.contract.contractAddress = [...new Set(address)];
+  public updateListener(contract: IContractOptions): void {
+    if (this.list.find(e => e.contractAddress === contract.contractAddress)) {
+      throw Error("Duplicate listeners for contract");
     }
 
-    if (fromBlock > 0) {
-      this.fromBlock = fromBlock;
-    }
-
-    if (topics && topics.length > 0) {
-      this.options.contract.topics = topics;
-    }
+    this.list.push(contract);
 
     this.loggerService.log(
-      `ETH Listener updated: ${address.join(", ")} @ ${fromBlock} @ ${topics ? JSON.stringify(topics) : ""}`,
+      `ETH Listener updated: ${contract.contractAddress}`,
       `${EthersContractService.name}-${this.instanceId}`,
     );
   }

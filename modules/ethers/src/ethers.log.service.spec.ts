@@ -3,34 +3,94 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Test } from "@nestjs/testing";
 import { Ctx, EventPattern, Payload } from "@nestjs/microservices";
 import { CronExpression } from "@nestjs/schedule";
-import { BaseContract, ContractFactory, Interface, JsonRpcProvider, Log, Wallet, ZeroHash } from "ethers";
+import { BaseContract, ContractFactory, Interface, JsonRpcProvider, Wallet } from "ethers";
 import { config } from "dotenv";
 
 import { LicenseModule } from "@gemunion/nest-js-module-license";
 import { delay } from "@gemunion/utils";
 
 import { EthersContractModule } from "./ethers.contract.module";
-import { ILogEvent, IModuleOptions } from "./interfaces";
-import Erc721Contract from "./interfaces/abi/ERC721Simple.json";
+import { ILogEvent, ILogWithIndex, IModuleOptions } from "./interfaces";
+import Erc20Contract from "./contracts/ERC20Ownable.json";
+import Erc721Contract from "./contracts/ERC721Ownable.json";
+import ExchangeContract from "./contracts/Exchange.json";
 
-interface IERC721 extends BaseContract {
-  renounceRole: (role: string, account: string) => Promise<any>;
+interface IERC20 extends BaseContract {
+  mint: (to: string, amount: bigint) => Promise<any>;
+  approve: (spender: string, value: bigint) => Promise<any>;
+  transferFrom: (from: string, to: string, value: bigint) => Promise<any>;
 }
 
-export interface IAccessControlRoleRevokedEvent {
-  role: string;
-  account: string;
-  sender: string;
+interface IERC721 extends BaseContract {
+  mint: (to: string, tokenId: bigint) => Promise<any>;
+  approve: (to: string, tokenId: bigint) => Promise<any>;
+  transferFrom: (from: string, to: string, tokenId: bigint) => Promise<any>;
+}
+
+interface IExchange extends BaseContract {
+  swap: (
+    item: {
+      account: string;
+      token: string;
+      tokenId: bigint;
+    },
+    price: {
+      account: string;
+      token: string;
+      amount: bigint;
+    },
+  ) => Promise<any>;
+}
+
+interface IERC20ApprovalEvent {
+  owner: string;
+  spender: string;
+  value: string;
+}
+
+interface IERC20TransferEvent {
+  from: string;
+  to: string;
+  value: string;
+}
+
+interface IERC721ApprovalEvent {
+  owner: string;
+  to: string;
+  tokenId: string;
+}
+
+interface IERC721TransferEvent {
+  from: string;
+  to: string;
+  tokenId: string;
+}
+
+interface IExchangeSwapEvent {
+  success: string;
 }
 
 config();
 
+const AMOUNT = 10000000n;
+const TOKENID = 1n;
+
 @Injectable()
 class TestEthersContractService {
-  public async logEvent(event: ILogEvent<IAccessControlRoleRevokedEvent>, _ctx: Log): Promise<void> {
-    console.info("event", event);
-    console.info("ctx", _ctx);
-    await Promise.resolve(event);
+  public async logEvent(
+    event: ILogEvent<
+      IERC20ApprovalEvent | IERC20TransferEvent | IERC721ApprovalEvent | IERC721TransferEvent | IExchangeSwapEvent
+    >,
+    ctx: ILogWithIndex,
+  ): Promise<void> {
+    // console.info("event", event.name);
+    // console.info("ctx", ctx);
+    // console.info(
+    //   parseInt(ctx.blockNumber.toString(), 16),
+    //   parseInt(ctx.transactionIndex.toString(), 16),
+    //   parseInt(ctx.logIndex.toString(), 16),
+    // );
+    await Promise.resolve({ event, ctx });
   }
 }
 
@@ -39,18 +99,50 @@ class TestEthersContractController {
   constructor(private readonly testEthersContractService: TestEthersContractService) {}
 
   @EventPattern({
-    contractType: "TEST_CONTRACT",
-    eventName: "RoleRevoked",
+    contractType: "ERC20_CONTRACT",
+    eventName: "Approval",
   })
-  public logEvent1(@Payload() event: ILogEvent<IAccessControlRoleRevokedEvent>, @Ctx() ctx: Log): Promise<void> {
+  public logEvent1(@Payload() event: ILogEvent<IERC20ApprovalEvent>, @Ctx() ctx: ILogWithIndex): Promise<void> {
     return this.testEthersContractService.logEvent(event, ctx);
   }
 
   @EventPattern({
-    contractType: "TEST_CONTRACT",
-    eventName: "RoleRevoked",
+    contractType: "ERC20_CONTRACT",
+    eventName: "Transfer",
   })
-  public logEvent2(@Payload() event: ILogEvent<IAccessControlRoleRevokedEvent>, @Ctx() ctx: Log): Promise<void> {
+  public logEvent2(@Payload() event: ILogEvent<IERC20TransferEvent>, @Ctx() ctx: ILogWithIndex): Promise<void> {
+    return this.testEthersContractService.logEvent(event, ctx);
+  }
+
+  @EventPattern({
+    contractType: "ERC721_CONTRACT",
+    eventName: "Approval",
+  })
+  public logEvent3(@Payload() event: ILogEvent<IERC721ApprovalEvent>, @Ctx() ctx: ILogWithIndex): Promise<void> {
+    return this.testEthersContractService.logEvent(event, ctx);
+  }
+
+  @EventPattern({
+    contractType: "ERC721_CONTRACT",
+    eventName: "Transfer",
+  })
+  public logEvent4(@Payload() event: ILogEvent<IERC721TransferEvent>, @Ctx() ctx: ILogWithIndex): Promise<void> {
+    return this.testEthersContractService.logEvent(event, ctx);
+  }
+
+  @EventPattern({
+    contractType: "EXCHANGE_CONTRACT",
+    eventName: "Swap",
+  })
+  public logEvent5(@Payload() event: ILogEvent<IExchangeSwapEvent>, @Ctx() ctx: ILogWithIndex): Promise<void> {
+    return this.testEthersContractService.logEvent(event, ctx);
+  }
+
+  @EventPattern({
+    contractType: "EXCHANGE_CONTRACT",
+    eventName: "Swap",
+  })
+  public logEvent6(@Payload() event: ILogEvent<IExchangeSwapEvent>, @Ctx() ctx: ILogWithIndex): Promise<void> {
     return this.testEthersContractService.logEvent(event, ctx);
   }
 }
@@ -74,7 +166,9 @@ class TestEthersContractModule {}
 describe.only("EthersServer", () => {
   let logSpyContract: jest.SpyInstance;
   let provider: JsonRpcProvider;
-  let contract: IERC721;
+  let priceContract: IERC20;
+  let itemContract: IERC721;
+  let exchangeContract: IExchange;
 
   // https://github.com/facebook/jest/issues/11543
   jest.setTimeout(20000);
@@ -82,9 +176,45 @@ describe.only("EthersServer", () => {
   beforeAll(async () => {
     provider = new JsonRpcProvider(process.env.JSON_RPC_ADDR);
     const wallet = new Wallet(process.env.PRIVATE_KEY, provider);
-    const factory = new ContractFactory<Array<any>, IERC721>(Erc721Contract.abi, Erc721Contract.bytecode, wallet);
-    contract = await factory.deploy("name", "symbol", 0, "http://localhost/");
-    await contract.waitForDeployment();
+
+    const exchangeFactory = new ContractFactory<Array<any>, IExchange>(
+      ExchangeContract.abi,
+      ExchangeContract.bytecode,
+      wallet,
+    );
+    exchangeContract = await exchangeFactory.deploy();
+    await exchangeContract.waitForDeployment();
+
+    const priceFactory = new ContractFactory<Array<any>, IERC20>(Erc20Contract.abi, Erc20Contract.bytecode, wallet);
+    priceContract = await priceFactory.deploy("name", "symbol");
+    await priceContract.waitForDeployment();
+
+    const tx1 = await priceContract.mint(process.env.ACCOUNT, AMOUNT);
+    await tx1.wait();
+    const tx2 = await priceContract.approve(await exchangeContract.getAddress(), AMOUNT);
+    await tx2.wait();
+
+    const itemFactory = new ContractFactory<Array<any>, IERC721>(Erc721Contract.abi, Erc721Contract.bytecode, wallet);
+    itemContract = await itemFactory.deploy("name", "symbol");
+    await itemContract.waitForDeployment();
+    const tx3 = await itemContract.mint(process.env.ACCOUNT, TOKENID);
+    await tx3.wait();
+    const tx4 = await itemContract.approve(await exchangeContract.getAddress(), TOKENID);
+    await tx4.wait();
+
+    const tx5 = await exchangeContract.swap(
+      {
+        account: process.env.ACCOUNT,
+        token: await itemContract.getAddress(),
+        tokenId: TOKENID,
+      },
+      {
+        account: process.env.ACCOUNT,
+        token: await priceContract.getAddress(),
+        amount: AMOUNT,
+      },
+    );
+    await tx5.wait();
   });
 
   describe("ContractLog", () => {
@@ -112,15 +242,67 @@ describe.only("EthersServer", () => {
             useFactory: async (configService: ConfigService): Promise<IModuleOptions> => {
               const fromBlock = ~~configService.get<string>("STARTING_BLOCK", "0");
               // producer queues running on the web server
-              const address = await contract.getAddress();
+              const address = await priceContract.getAddress();
               return {
                 contract: {
-                  contractType: "TEST_CONTRACT",
+                  contractType: "ERC20_CONTRACT",
+                  contractAddress: [address],
+                  contractInterface: new Interface(Erc20Contract.abi),
+                  // prettier-ignore
+                  eventNames: [
+                    "Transfer",
+                    "Approval",
+                  ],
+                },
+                block: {
+                  fromBlock,
+                  debug: true,
+                  cron: CronExpression.EVERY_5_SECONDS,
+                },
+              };
+            },
+          }),
+          EthersContractModule.forRootAsync(EthersContractModule, {
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: async (configService: ConfigService): Promise<IModuleOptions> => {
+              const fromBlock = ~~configService.get<string>("STARTING_BLOCK", "0");
+              // producer queues running on the web server
+              const address = await itemContract.getAddress();
+              return {
+                contract: {
+                  contractType: "ERC721_CONTRACT",
                   contractAddress: [address],
                   contractInterface: new Interface(Erc721Contract.abi),
                   // prettier-ignore
                   eventNames: [
-                    "RoleRevoked",
+                    "Transfer",
+                    "Approval",
+                  ],
+                },
+                block: {
+                  fromBlock,
+                  debug: true,
+                  cron: CronExpression.EVERY_5_SECONDS,
+                },
+              };
+            },
+          }),
+          EthersContractModule.forRootAsync(EthersContractModule, {
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: async (configService: ConfigService): Promise<IModuleOptions> => {
+              const fromBlock = ~~configService.get<string>("STARTING_BLOCK", "0");
+              // producer queues running on the web server
+              const address = await exchangeContract.getAddress();
+              return {
+                contract: {
+                  contractType: "EXCHANGE_CONTRACT",
+                  contractAddress: [address],
+                  contractInterface: new Interface(ExchangeContract.abi),
+                  // prettier-ignore
+                  eventNames: [
+                    "Swap",
                   ],
                 },
                 block: {
@@ -146,13 +328,9 @@ describe.only("EthersServer", () => {
     });
 
     it("should receive Event", async () => {
-      const tx = await contract.renounceRole(ZeroHash, process.env.ACCOUNT);
+      await delay(10000); // this depends on amount of blocks in blockchain
 
-      await tx.wait();
-
-      await delay(5000);
-
-      expect(logSpyContract).toBeCalledTimes(2);
+      expect(logSpyContract).toBeCalledTimes(8);
     });
   });
 });

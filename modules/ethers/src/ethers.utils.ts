@@ -41,7 +41,7 @@ export const getPastEvents = async (
       },
     ]);
 
-    if (logs) {
+    if (logs?.length) {
       events.push(...logs);
     }
   }

@@ -168,125 +168,118 @@ class TestEthersContractController {
 })
 class TestEthersContractModule {}
 
-describe.only("EthersServer", () => {
+describe("EthersServer", () => {
+  // https://github.com/facebook/jest/issues/11543
+  jest.setTimeout(60000);
+
   let logSpyContract: jest.SpyInstance;
 
-  // https://github.com/facebook/jest/issues/11543
-  jest.setTimeout(20000);
+  let testEthersContractService: TestEthersContractService;
 
-  beforeAll(async () => {});
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath: `.env`,
+        }),
+        LicenseModule.forRootAsync(LicenseModule, {
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService): string => {
+            return configService.get<string>("GEMUNION_API_KEY", process.env.GEMUNION_API_KEY);
+          },
+        }),
+        EthersContractModule.forRootAsync(EthersContractModule, {
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: async (configService: ConfigService): Promise<IModuleOptions> => {
+            const fromBlock = ~~configService.get<string>("STARTING_BLOCK", "0");
+            return Promise.resolve({
+              fromBlock,
+              debug: true,
+              cron: CronExpression.EVERY_5_SECONDS,
+            });
+          },
+        }),
+        TestEthersContractModule,
+      ],
+    }).compile();
 
-  describe("ContractLog", () => {
-    let testEthersContractService: TestEthersContractService;
+    testEthersContractService = module.get<TestEthersContractService>(TestEthersContractService);
+    logSpyContract = jest.spyOn(testEthersContractService, "logEvent");
 
-    // https://github.com/facebook/jest/issues/11543
-    jest.setTimeout(60000);
+    await module.init();
+  });
 
-    beforeEach(async () => {
-      const module = await Test.createTestingModule({
-        imports: [
-          ConfigModule.forRoot({
-            envFilePath: `.env`,
-          }),
-          LicenseModule.forRootAsync(LicenseModule, {
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService): string => {
-              return configService.get<string>("GEMUNION_API_KEY", process.env.GEMUNION_API_KEY);
-            },
-          }),
-          EthersContractModule.forRootAsync(EthersContractModule, {
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: async (configService: ConfigService): Promise<IModuleOptions> => {
-              const fromBlock = ~~configService.get<string>("STARTING_BLOCK", "0");
-              return Promise.resolve({
-                fromBlock,
-                debug: true,
-                cron: CronExpression.EVERY_5_SECONDS,
-              });
-            },
-          }),
-          TestEthersContractModule,
-        ],
-      }).compile();
+  afterEach(() => {
+    logSpyContract.mockClear();
+  });
 
-      testEthersContractService = module.get<TestEthersContractService>(TestEthersContractService);
-      logSpyContract = jest.spyOn(testEthersContractService, "logEvent");
+  it("should receive Event", async () => {
+    const provider = new JsonRpcProvider(process.env.JSON_RPC_ADDR);
+    const wallet = new Wallet(process.env.PRIVATE_KEY, provider);
 
-      await module.init();
+    const exchangeFactory = new ContractFactory<Array<any>, IExchange>(
+      ExchangeContract.abi,
+      ExchangeContract.bytecode,
+      wallet,
+    );
+    const exchangeContract = await exchangeFactory.deploy();
+    await exchangeContract.waitForDeployment();
+
+    const priceFactory = new ContractFactory<Array<any>, IERC20>(Erc20Contract.abi, Erc20Contract.bytecode, wallet);
+    const priceContract = await priceFactory.deploy("name", "symbol");
+    await priceContract.waitForDeployment();
+
+    const tx1 = await priceContract.mint(process.env.ACCOUNT, AMOUNT);
+    await tx1.wait();
+    const tx2 = await priceContract.approve(await exchangeContract.getAddress(), AMOUNT);
+    await tx2.wait();
+
+    const itemFactory = new ContractFactory<Array<any>, IERC721>(Erc721Contract.abi, Erc721Contract.bytecode, wallet);
+    const itemContract = await itemFactory.deploy("name", "symbol");
+    await itemContract.waitForDeployment();
+
+    const tx3 = await itemContract.mint(process.env.ACCOUNT, TOKENID);
+    await tx3.wait();
+    const tx4 = await itemContract.approve(await exchangeContract.getAddress(), TOKENID);
+    await tx4.wait();
+
+    const tx5 = await exchangeContract.swap(
+      {
+        account: process.env.ACCOUNT,
+        token: await itemContract.getAddress(),
+        tokenId: TOKENID,
+      },
+      {
+        account: process.env.ACCOUNT,
+        token: await priceContract.getAddress(),
+        amount: AMOUNT,
+      },
+    );
+    await tx5.wait();
+
+    testEthersContractService.updateListener({
+      contractType: ContractType.ERC20_TOKEN,
+      contractAddress: [await priceContract.getAddress()],
+      contractInterface: new Interface(Erc20Contract.abi),
+      eventNames: ["Transfer", "Approval"],
+    });
+    testEthersContractService.updateListener({
+      contractType: ContractType.ERC721_TOKEN,
+      contractAddress: [await itemContract.getAddress()],
+      contractInterface: new Interface(Erc721Contract.abi),
+      eventNames: ["Transfer", "Approval"],
+    });
+    testEthersContractService.updateListener({
+      contractType: ContractType.EXCHANGE,
+      contractAddress: [await exchangeContract.getAddress()],
+      contractInterface: new Interface(ExchangeContract.abi),
+      eventNames: ["Swap"],
     });
 
-    afterEach(() => {
-      logSpyContract.mockClear();
-    });
+    await delay(10000); // this depends on amount of blocks in blockchain
 
-    it("should receive Event", async () => {
-      const provider = new JsonRpcProvider(process.env.JSON_RPC_ADDR);
-      const wallet = new Wallet(process.env.PRIVATE_KEY, provider);
-
-      const exchangeFactory = new ContractFactory<Array<any>, IExchange>(
-        ExchangeContract.abi,
-        ExchangeContract.bytecode,
-        wallet,
-      );
-      const exchangeContract = await exchangeFactory.deploy();
-      await exchangeContract.waitForDeployment();
-
-      const priceFactory = new ContractFactory<Array<any>, IERC20>(Erc20Contract.abi, Erc20Contract.bytecode, wallet);
-      const priceContract = await priceFactory.deploy("name", "symbol");
-      await priceContract.waitForDeployment();
-
-      const tx1 = await priceContract.mint(process.env.ACCOUNT, AMOUNT);
-      await tx1.wait();
-      const tx2 = await priceContract.approve(await exchangeContract.getAddress(), AMOUNT);
-      await tx2.wait();
-
-      const itemFactory = new ContractFactory<Array<any>, IERC721>(Erc721Contract.abi, Erc721Contract.bytecode, wallet);
-      const itemContract = await itemFactory.deploy("name", "symbol");
-      await itemContract.waitForDeployment();
-
-      const tx3 = await itemContract.mint(process.env.ACCOUNT, TOKENID);
-      await tx3.wait();
-      const tx4 = await itemContract.approve(await exchangeContract.getAddress(), TOKENID);
-      await tx4.wait();
-
-      const tx5 = await exchangeContract.swap(
-        {
-          account: process.env.ACCOUNT,
-          token: await itemContract.getAddress(),
-          tokenId: TOKENID,
-        },
-        {
-          account: process.env.ACCOUNT,
-          token: await priceContract.getAddress(),
-          amount: AMOUNT,
-        },
-      );
-      await tx5.wait();
-
-      testEthersContractService.updateListener({
-        contractType: ContractType.ERC20_TOKEN,
-        contractAddress: await priceContract.getAddress(),
-        contractInterface: new Interface(Erc20Contract.abi),
-        eventNames: ["Transfer", "Approval"],
-      });
-      testEthersContractService.updateListener({
-        contractType: ContractType.ERC721_TOKEN,
-        contractAddress: await itemContract.getAddress(),
-        contractInterface: new Interface(Erc721Contract.abi),
-        eventNames: ["Transfer", "Approval"],
-      });
-      testEthersContractService.updateListener({
-        contractType: ContractType.EXCHANGE,
-        contractAddress: await exchangeContract.getAddress(),
-        contractInterface: new Interface(ExchangeContract.abi),
-        eventNames: ["Swap"],
-      });
-
-      await delay(10000); // this depends on amount of blocks in blockchain
-
-      expect(logSpyContract).toBeCalledTimes(8);
-    });
+    expect(logSpyContract).toBeCalledTimes(8);
   });
 });

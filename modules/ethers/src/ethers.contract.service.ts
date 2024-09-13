@@ -6,15 +6,15 @@ import { PATTERN_METADATA } from "@nestjs/microservices/constants";
 import { CronExpression, SchedulerRegistry } from "@nestjs/schedule";
 import { CronJob } from "cron";
 import { EMPTY, from, Observable, Subject } from "rxjs";
+import { mergeAll, mergeMap } from "rxjs/operators";
 import { JsonRpcProvider, Log } from "ethers";
 import { DiscoveredMethodWithMeta, DiscoveryService } from "@golevelup/nestjs-discovery";
 
 import { recursivelyDecodeResult } from "@gemunion/utils-eth";
 
 import { getPastEvents } from "./ethers.utils";
-import { ETHERS_RPC, MODULE_OPTIONS_PROVIDER } from "./ethers.constants";
+import { DEFAULT_LATENCY, ETHERS_RPC, MODULE_OPTIONS_PROVIDER } from "./ethers.constants";
 import { IContractOptions, ILogEvent, IModuleOptions } from "./interfaces";
-import { mergeAll, mergeMap } from "rxjs/operators";
 
 @Injectable()
 export class EthersContractService {
@@ -23,7 +23,7 @@ export class EthersContractService {
   private fromBlock: number;
   private toBlock: number;
   private cronLock: boolean = false;
-  private list: Array<IContractOptions> = [];
+  private registry: Array<IContractOptions> = [];
 
   private subject = new Subject<any>();
 
@@ -55,7 +55,7 @@ export class EthersContractService {
 
   public async init(): Promise<void> {
     this.instanceId = (Math.random() + 1).toString(36).substring(7);
-    this.latency = ~~this.configService.get<string>("LATENCY", "32");
+    this.latency = ~~this.configService.get<number>("LATENCY", DEFAULT_LATENCY);
     this.fromBlock = this.options.fromBlock;
     this.toBlock = await this.getLastBlock();
     // if block time is more than Cron delay
@@ -110,11 +110,11 @@ export class EthersContractService {
     }
 
     // don't listen when no addresses are supplied
-    if (!this.list.length) {
+    if (!this.registry.length) {
       return;
     }
 
-    const allAddress = this.list.map(e => e.contractAddress);
+    const allAddress = this.registry.reduce<Array<string>>((memo, current) => memo.concat(current.contractAddress), []);
 
     const events = await getPastEvents(this.provider, allAddress, fromBlockNumber, toBlockNumber, 100).catch(e => {
       this.loggerService.log(JSON.stringify(e, null, "\t"), `${EthersContractService.name}-${this.instanceId}`);
@@ -122,7 +122,9 @@ export class EthersContractService {
     });
 
     for (const log of events) {
-      const contract = this.list.find(e => e.contractAddress.toLowerCase() === log.address.toLowerCase());
+      const contract = this.registry.find(e =>
+        e.contractAddress.map(a => a.toLowerCase()).includes(log.address.toLowerCase()),
+      );
 
       if (!contract) {
         continue;
@@ -164,14 +166,14 @@ export class EthersContractService {
   }
 
   public updateListener(contract: IContractOptions): void {
-    if (this.list.find(e => e.contractAddress === contract.contractAddress)) {
+    if (this.registry.find(e => e.contractAddress === contract.contractAddress)) {
       throw Error("Duplicate listeners for contract");
     }
 
-    this.list.push(contract);
+    this.registry.push(contract);
 
     this.loggerService.log(
-      `ETH Listener updated: ${contract.contractAddress}`,
+      `ETH Listener updated: ${contract.contractAddress.join(", ")}`,
       `${EthersContractService.name}-${this.instanceId}`,
     );
   }

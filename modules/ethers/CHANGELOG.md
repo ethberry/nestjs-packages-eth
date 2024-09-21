@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.0.5](https://github.com/gemunion/ethers-packages/compare/@gemunion/nest-js-module-ethers@7.0.4...@gemunion/nest-js-module-ethers@7.0.5) (2024-09-21)
+
+### Bug Fixes
+
+- fix latency in tests ([debba71](https://github.com/gemunion/ethers-packages/commit/debba71e376ef7fd36d0435dd3b8d92769574b57))
+- some fixes ([3b820c8](https://github.com/gemunion/ethers-packages/commit/3b820c806c1f612057522a14dbbf1402341b65a6))
+
 ## [7.0.4](https://github.com/gemunion/ethers-packages/compare/@gemunion/nest-js-module-ethers@7.0.3...@gemunion/nest-js-module-ethers@7.0.4) (2024-09-14)
 
 ### Bug Fixes

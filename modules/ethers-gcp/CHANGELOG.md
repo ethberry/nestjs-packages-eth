@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 7.0.5 (2024-09-28)
+
+### Bug Fixes
+
+- eslint + ethberry ([b2589d5](https://github.com/ethberry/ethers-packages/commit/b2589d5e3488b32a53ea8905e4a74676ceb389a4))
+
 ## [7.0.4](https://github.com/ethberry/ethers-packages/compare/@gemunion/nest-js-module-ethers-gcp@7.0.3...@gemunion/nest-js-module-ethers-gcp@7.0.4) (2024-09-14)
 
 **Note:** Version bump only for package @gemunion/nest-js-module-ethers-gcp

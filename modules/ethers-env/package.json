@@ -5,7 +5,7 @@
     "url": "https://ethberry.io/"
   },
   "bugs": {
-    "url": "https://github.com/ethberry/ethers-packages/issues"
+    "url": "https://github.com/ethberry/nestjs-packages-eth/issues"
   },
   "dependencies": {
     "@ethberry/constants": "0.13.3",
@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ethberry/ethers-packages.git"
+    "url": "git+https://github.com/ethberry/nestjs-packages-eth.git"
   },
   "scripts": {
     "build": "tsc",
@@ -43,7 +43,7 @@
     "preversion": "npm run build && npm run test",
     "test": "exit 0"
   },
-  "title": "-=Gemun Ion Studio=-",
+  "title": "-=EthBerry Studio=-",
   "types": "./dist/index.d.ts",
   "version": "7.0.5"
 }

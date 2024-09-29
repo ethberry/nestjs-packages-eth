@@ -28,7 +28,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ethberry/ethers-packages.git"
+    "url": "git+https://github.com/ethberry/nestjs-packages-eth.git"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap --concurrency 1 --hoist --ignore-scripts",

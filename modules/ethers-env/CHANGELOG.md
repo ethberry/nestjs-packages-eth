@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.0.6](https://github.com/ethberry/nestjs-packages-eth/compare/@ethberry/nest-js-module-ethers-env@7.0.5...@ethberry/nest-js-module-ethers-env@7.0.6) (2024-10-04)
+
+### Bug Fixes
+
+- **deps:** update [@ethberry](https://github.com/ethberry) packages ([d27212a](https://github.com/ethberry/nestjs-packages-eth/commit/d27212a833340a4eb0350ad9b82c130d30c60d81))
+- ethberry ([afb5350](https://github.com/ethberry/nestjs-packages-eth/commit/afb5350f2ee006c7d38f8055dc60d0905e7cee3d))
+
 ## 7.0.5 (2024-09-28)
 
 ### Bug Fixes

@@ -8,7 +8,7 @@
     "url": "https://github.com/ethberry/nestjs-packages-eth/issues"
   },
   "dependencies": {
-    "@ethberry/constants": "0.13.3",
+    "@ethberry/constants": "0.13.5",
     "@ethberry/nestjs-ethers": "8.0.3"
   },
   "devDependencies": {

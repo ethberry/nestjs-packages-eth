@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@ethberry/constants": "0.13.5",
-    "@ethberry/nestjs-ethers": "8.0.3"
+    "@ethberry/nestjs-ethers": "8.0.4"
   },
   "devDependencies": {
     "@ethberry/nest-js-module-secret-manager-aws": "4.0.64",

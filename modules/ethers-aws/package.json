@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@ethberry/nest-js-module-secret-manager-aws": "4.0.64",
-    "@nestjs/config": "3.2.3",
+    "@nestjs/config": "3.3.0",
     "ethers": "6.13.3"
   },
   "engines": {

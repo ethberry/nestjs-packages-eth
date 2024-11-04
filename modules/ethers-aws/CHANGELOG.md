@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [7.0.8](https://github.com/ethberry/nestjs-packages-eth/compare/@ethberry/nest-js-module-ethers-aws@7.0.7...@ethberry/nest-js-module-ethers-aws@7.0.8) (2024-11-04)
+
+### Bug Fixes
+
+- **deps:** update all non-major dependencies ([07e22cb](https://github.com/ethberry/nestjs-packages-eth/commit/07e22cb8dbd1f314c92f37e09716cb6ec99d4ba4))
+
 ## [7.0.7](https://github.com/ethberry/nestjs-packages-eth/compare/@ethberry/nest-js-module-ethers-aws@7.0.6...@ethberry/nest-js-module-ethers-aws@7.0.7) (2024-10-13)
 
 ### Bug Fixes

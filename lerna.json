@@ -9,7 +9,7 @@
       "yes": true
     }
   },
-  "packages": ["modules/*"],
+  "packages": ["modules/*", "auth/*"],
   "useNx": true,
   "version": "independent"
 }

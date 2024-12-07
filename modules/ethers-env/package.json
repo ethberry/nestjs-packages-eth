@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "@ethberry/constants": "0.13.5",
-    "@ethberry/nestjs-ethers": "8.0.4"
+    "@ethberry/nestjs-ethers": "8.0.5"
   },
   "devDependencies": {
-    "@ethberry/nest-js-module-secret-manager-env": "1.1.51",
+    "@ethberry/nest-js-module-secret-manager-env": "1.1.52",
     "@nestjs/config": "3.3.0",
     "ethers": "6.13.4"
   },

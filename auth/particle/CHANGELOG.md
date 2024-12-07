@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 3.1.53 (2024-12-07)
+
+### Bug Fixes
+
+- **deps:** update all non-major dependencies ([e8c0d5a](https://github.com/ethberry/nestjs-packages/commit/e8c0d5aa0db73276fc42ec4d6ea36ac263e2eaa8))
+- lost deps ([21bf2a9](https://github.com/ethberry/nestjs-packages/commit/21bf2a955bd31f92a813312d2ec9bed3f634d0a4))
+
 ## 3.1.52 (2024-11-04)
 
 ### Bug Fixes

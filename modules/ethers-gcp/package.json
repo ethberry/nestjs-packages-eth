@@ -12,7 +12,7 @@
     "@ethberry/nestjs-ethers": "8.0.5"
   },
   "devDependencies": {
-    "@ethberry/nest-js-module-secret-manager-gcp": "1.1.52",
+    "@ethberry/nest-js-module-secret-manager-gcp": "2.0.0",
     "@nestjs/config": "3.3.0",
     "ethers": "6.13.4"
   },
@@ -24,7 +24,7 @@
   "main": "dist/index.js",
   "name": "@ethberry/nest-js-module-ethers-gcp",
   "peerDependencies": {
-    "@ethberry/nest-js-module-secret-manager-gcp": "^1.0.0",
+    "@ethberry/nest-js-module-secret-manager-gcp": "^1.0.0 || ^2.0.0",
     "@nestjs/config": "^3.0.0",
     "ethers": "^6.0.0"
   },

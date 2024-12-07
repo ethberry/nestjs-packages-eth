@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [8.0.0](https://github.com/ethberry/nestjs-packages-eth/compare/@ethberry/nest-js-module-ethers-aws@7.0.9...@ethberry/nest-js-module-ethers-aws@8.0.0) (2024-12-07)
+
+### Bug Fixes
+
+- **deps:** update [@ethberry](https://github.com/ethberry) packages ([7c7adad](https://github.com/ethberry/nestjs-packages-eth/commit/7c7adad406c40519829d4fa093f4192bd096bc3f))
+- versions ([a55f4cb](https://github.com/ethberry/nestjs-packages-eth/commit/a55f4cbe467fd62de50be49ac3ebe992c47e20fc))
+
 ## [7.0.9](https://github.com/ethberry/nestjs-packages-eth/compare/@ethberry/nest-js-module-ethers-aws@7.0.8...@ethberry/nest-js-module-ethers-aws@7.0.9) (2024-12-07)
 
 **Note:** Version bump only for package @ethberry/nest-js-module-ethers-aws

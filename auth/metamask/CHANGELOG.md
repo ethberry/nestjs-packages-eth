@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.0.0](https://github.com/ethberry/nestjs-packages/compare/@ethberry/nest-js-module-metamask@3.1.53...@ethberry/nest-js-module-metamask@4.0.0) (2024-12-07)
+
+### Bug Fixes
+
+- **deps:** update [@ethberry](https://github.com/ethberry) packages ([7c7adad](https://github.com/ethberry/nestjs-packages/commit/7c7adad406c40519829d4fa093f4192bd096bc3f))
+- **deps:** update dependency @metamask/eth-sig-util to v8 ([eb3194d](https://github.com/ethberry/nestjs-packages/commit/eb3194dfcb015b28e7c9090a358031754e527a5a))
+
 ## 3.1.53 (2024-12-07)
 
 ### Bug Fixes

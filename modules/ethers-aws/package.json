@@ -12,7 +12,7 @@
     "@ethberry/nestjs-ethers": "8.0.5"
   },
   "devDependencies": {
-    "@ethberry/nest-js-module-secret-manager-aws": "5.0.0",
+    "@ethberry/nest-js-module-secret-manager-aws": "6.0.1",
     "@nestjs/config": "4.0.0",
     "ethers": "6.13.5"
   },
@@ -24,7 +24,7 @@
   "main": "dist/index.js",
   "name": "@ethberry/nest-js-module-ethers-aws",
   "peerDependencies": {
-    "@ethberry/nest-js-module-secret-manager-aws": "^5.0.0",
+    "@ethberry/nest-js-module-secret-manager-aws": "^5.0.0 || ^6.0.0",
     "@nestjs/config": "^3.0.0 || ^4.0.0",
     "ethers": "^6.0.0"
   },

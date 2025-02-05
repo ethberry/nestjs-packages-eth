@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [9.0.2](https://github.com/ethberry/nestjs-packages-eth/compare/@ethberry/nest-js-module-ethers-gcp@9.0.1...@ethberry/nest-js-module-ethers-gcp@9.0.2) (2025-02-05)
+
+### Bug Fixes
+
+- **deps:** update [@ethberry](https://github.com/ethberry) packages ([07a788a](https://github.com/ethberry/nestjs-packages-eth/commit/07a788a2f93f2dcd4d102eee872ee30e79df3ab6))
+
 ## [9.0.1](https://github.com/ethberry/nestjs-packages-eth/compare/@ethberry/nest-js-module-ethers-gcp@8.0.0...@ethberry/nest-js-module-ethers-gcp@9.0.1) (2025-01-26)
 
 ### Bug Fixes

@@ -8,11 +8,11 @@
     "url": "https://github.com/ethberry/nestjs-packages-eth/issues"
   },
   "dependencies": {
-    "@ethberry/constants": "0.13.6",
+    "@ethberry/constants": "0.13.7",
     "@ethberry/nestjs-ethers": "9.0.1"
   },
   "devDependencies": {
-    "@ethberry/nest-js-module-secret-manager-env": "3.0.2",
+    "@ethberry/nest-js-module-secret-manager-env": "3.0.3",
     "@nestjs/config": "4.0.0",
     "ethers": "6.13.5"
   },

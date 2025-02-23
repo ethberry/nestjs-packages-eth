@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [5.0.4](https://github.com/ethberry/nestjs-packages/compare/@ethberry/nest-js-module-metamask@5.0.3...@ethberry/nest-js-module-metamask@5.0.4) (2025-02-23)
+
+### Bug Fixes
+
+- **deps:** update [@ethberry](https://github.com/ethberry) packages ([24aaec9](https://github.com/ethberry/nestjs-packages/commit/24aaec99220c03875367f70748a358c93cc42e61))
+- **deps:** update [@ethberry](https://github.com/ethberry) packages ([4621dc6](https://github.com/ethberry/nestjs-packages/commit/4621dc65936994d52c375731cf90cf23658d3da5))
+- **deps:** update all non-major dependencies ([be917b1](https://github.com/ethberry/nestjs-packages/commit/be917b1eeef4b580fe6cf646dfb855ce96d2a73c))
+
 ## [5.0.3](https://github.com/ethberry/nestjs-packages/compare/@ethberry/nest-js-module-metamask@5.0.2...@ethberry/nest-js-module-metamask@5.0.3) (2025-02-09)
 
 ### Bug Fixes

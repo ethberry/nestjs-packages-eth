@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@ethberry/constants": "0.13.7",
-    "@ethberry/nest-js-validators": "6.0.4",
+    "@ethberry/nest-js-validators": "6.0.5",
     "@ethberry/types-jwt": "0.4.9",
     "@metamask/eth-sig-util": "8.2.0",
     "class-transformer": "0.5.1",
